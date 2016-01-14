@@ -7,6 +7,4 @@ I've planned to do Jacobi iterations, successive-over-relaxation, and possibly a
 Then I'll compare performance. I'm also going to make it multithreaded and use SIMD.
 
 Fun stuff! It actually kinda works right now, though it's slow and the region conditions are hard-coded. But you can see it work:
-    make
-    ./main 600
-    python grad.py
+``make && ./main 600 && python grad.py``.
