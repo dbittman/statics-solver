@@ -25,15 +25,7 @@ def SolverGrid_factory(length):
     return g
 
 
-Line = SolverCell * 10
 grid = SolverGrid_factory(10)
-
-
-for i in range(10):
-    l = Line()
-    for j in range(10):
-        l[j].value = j * i
-    grid.cells[i] = pointer(l)
 
 solver.python_call(byref(grid))
 

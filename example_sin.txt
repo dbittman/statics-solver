@@ -1,9 +1,14 @@
 # specify grid size
-gridsize 100,100
-
+gridsize 300
 # create a dirichlet boundary condition along the left wall.
-dirichlet 1,1 -> 1,100 = sin(y)
+dirichlet 1,1 1,grid.len = math.sin(y * math.pi / grid.len)
 
-# create a initial point charge in the middle, of value 12.7
-cell 50,50 initial 12.7
+# set the other walls to 0
+dirichlet 1,1 grid.len,1 = 0
+dirichlet grid.len,1 grid.len,grid.len = 0
+dirichlet 1,grid.len grid.len,grid.len = 0
+
+dirichlet 1,1 grid.len,grid.len = 1
+
+cell grid.len/2+10,grid.len/2 initial -100000
 

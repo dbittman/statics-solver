@@ -5,13 +5,13 @@
 
 struct cell {
 	float value;
-	float neumann[4];
 	float value_prev;
 	float dirichlet;
 	float initial;
 	float error;
-	char neumann_present[4];
 	char dirichlet_present;
+	char neumann_present[4];
+	float neumann[4];
 };
 
 struct grid {
