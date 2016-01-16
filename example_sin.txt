@@ -1,0 +1,9 @@
+# specify grid size
+gridsize 100,100
+
+# create a dirichlet boundary condition along the left wall.
+dirichlet 1,1 -> 1,100 = sin(y)
+
+# create a initial point charge in the middle, of value 12.7
+cell 50,50 initial 12.7
+

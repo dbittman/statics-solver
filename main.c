@@ -3,9 +3,33 @@
 #include <stdalign.h>
 #include <string.h>
 #include <math.h>
+#include "grid.h"
+
 int GRID_LENGTH;
 
 #define MAX_GRID_LENGTH 5000
+
+
+
+struct TestStruct {
+	int a;
+	int b[4];
+};
+
+void python_call(struct grid *grid)
+{
+	printf(":: %d %p %p\n", grid->len, grid, grid->cells[0][0]);
+	printf("%d %f %f\n",
+			grid->len,
+			grid->cells[0][0].value,
+			grid->cells[2][2].value
+		  );
+	grid->cells[1][1].value = 128.0;
+}
+
+
+
+
 
 alignas (16) double grid[MAX_GRID_LENGTH][MAX_GRID_LENGTH][2];
 alignas (16) double init[MAX_GRID_LENGTH][MAX_GRID_LENGTH];
@@ -28,6 +52,11 @@ void writeout(int iter)
 		fprintf(f, "\n");
 	}
 	fclose(f);
+}
+
+void init_grid(struct grid *grid)
+{
+	
 }
 
 int main(int argc, char **argv)
