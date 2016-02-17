@@ -2,12 +2,25 @@ CFLAGS=-O3 -std=gnu11 -fPIC
 LDFLAGS=-shared
 CC=clang
 
-solver.so: main.o jacobi.o
-	clang $(LDFLAGS) -Wl,-soname,solver.so -o solver.so jacobi.o main.o -lm
+SOURCES=engine/main.c engine/jacobi.c engine/sor.c
+OBJECTS=$(SOURCES:.c=.o)
+DEPS=$(SOURCES:.c=.d)
 
-main.o: main.c grid.h
+all: engine/solver.so solve
 
-jacobi.o: jacobi.c grid.h
+.PHONY: all
+
+solve: frontend/solve
+	@cp frontend/solve solve
+	@chmod a+x solve
+
+engine/solver.so: $(OBJECTS)
+	clang $(LDFLAGS) -Wl,-soname,engine/solver.so -o engine/solver.so $(OBJECTS) -lm
+
+-include $(DEPS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -MF $*.d -MMD -c $< -o $@
 
 clean:
 	-rm *.o solver.so

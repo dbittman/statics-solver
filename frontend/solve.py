@@ -1,14 +1,36 @@
+#!/usr/bin/env python
+
 import parse
 import c_solver
 import numpy as np
 import matplotlib.pyplot as plt
+import getopt
+import sys
+import math
 
-grid = parse.create_grid("example_sin.txt")
+methods = { "jacobi" : c_solver.SOLVER_JACOBI, "sor" : c_solver.SOLVER_SOR, "fft" : c_solver.SOLVER_FFT, "magic" : c_solver.SOLVER_MAGIC }
+
+method = methods["jacobi"]
+
+opts, args = getopt.getopt(sys.argv[1:], "m:")
+
+if len(args) == 0:
+    raise Exception("Provide an input file name to work on.")
+
+for opt, arg in opts:
+    if opt == '-m':
+        try:
+            method = methods[arg]
+        except:
+            raise Exception('Method ' + arg + ' unknown.')
+
+grid = parse.create_grid(args[0])
 if grid == 0:
     raise Exception('Input file is incomplete')
 
-c_solver.solve(grid, c_solver.SOLVER_JACOBI)
-
+res = c_solver.solve(grid, method)
+if math.isnan(res):
+    sys.exit(1)
 result = c_solver.reduce_to_array(grid)
 
 

@@ -2,4 +2,6 @@
 *.so
 __pycache__
 old
-
+*.d
+solve
+!frontend/solve

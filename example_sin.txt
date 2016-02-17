@@ -10,5 +10,5 @@ dirichlet 1,1 1,grid.len = math.sin(y * math.pi / grid.len)
 
 #dirichlet 1,1 grid.len,grid.len = 1
 
-#cell grid.len/2+10,grid.len/2 initial -100000
+cell grid.len/2+10,grid.len/2 initial -100000
 

@@ -1,6 +1,9 @@
 from ctypes import *
 
-SOLVER_JACOBI = c_int(1)
+SOLVER_JACOBI = c_int(0)
+SOLVER_SOR    = c_int(1)
+SOLVER_FFT    = c_int(2)
+SOLVER_MAGIC  = c_int(3)
 
 class SolverCell(Structure):
     _fields_ = [
@@ -18,6 +21,7 @@ def SolverGrid_factory(length):
     class SolverGrid(Structure):
         _fields_ = [
                 ("len", c_int),
+                ("iters", c_int),
                 ("cells", POINTER(SolverCell * length) * length)]
     g = SolverGrid()
     g.len = length
@@ -26,9 +30,11 @@ def SolverGrid_factory(length):
         g.cells[i] = pointer(Line())
     return g
 
-_solver = CDLL("./solver.so")
+_solver = CDLL("./engine/solver.so")
+solve_call = _solver.solve
+solve_call.restype = c_double
 def solve(grid, method):
-    _solver.solve(byref(grid), method)
+    return float(solve_call(byref(grid), method))
 
 def reduce_to_array(grid):
     arr = [[0.0 for x in range(grid.len)] for x in range(grid.len)]

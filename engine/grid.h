@@ -16,6 +16,7 @@ struct cell {
 
 struct grid {
 	int len;
+	int iters;
 	struct cell *cells[];
 };
 
