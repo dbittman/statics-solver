@@ -25,9 +25,6 @@ def parse_dirichlet(grid, tokens):
         grid.cells[x-1].contents[y-1].dirichlet = eval(expr)
         grid.cells[x-1].contents[y-1].dirichlet_present = 1
 
-
-
-
 parsers = {
         'cell':parse_cell,
         'dirichlet':parse_dirichlet
@@ -38,11 +35,7 @@ def create_grid(input_path):
     print("Building grid...")
     with open(input_path) as infile:
         for _, line in enumerate(infile):
-            tokens = line.split()
-            try:
-                tokens = tokens[0:tokens.index('#')]
-            except:
-                _
+            tokens = line.split('#', 1)[0].split()
             if len(tokens) == 0:
                 continue
             # okay, let's parse shit.
@@ -55,3 +48,4 @@ def create_grid(input_path):
                     raise Exception('must specify gridsize before any other command')
                 parsers[tokens[0]](grid, tokens)
     return grid
+

@@ -1,9 +1,9 @@
-CFLAGS=-O3 -std=gnu11 -fPIC -flto
-LDFLAGS=-shared -flto
-CC=gcc
+CFLAGS=-O3 -std=gnu11 -fPIC
+LDFLAGS=-shared
+CC=clang
 
 solver.so: main.o jacobi.o
-	gcc $(LDFLAGS) -Wl,-soname,solver.so -o solver.so jacobi.o main.o -lm
+	clang $(LDFLAGS) -Wl,-soname,solver.so -o solver.so jacobi.o main.o -lm
 
 main.o: main.c grid.h
 

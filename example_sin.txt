@@ -4,11 +4,11 @@ gridsize 300
 dirichlet 1,1 1,grid.len = math.sin(y * math.pi / grid.len)
 
 # set the other walls to 0
-dirichlet 1,1 grid.len,1 = 0
-dirichlet grid.len,1 grid.len,grid.len = 0
-dirichlet 1,grid.len grid.len,grid.len = 0
+#dirichlet 1,1 grid.len,1 = 0
+#dirichlet grid.len,1 grid.len,grid.len = 0
+#dirichlet 1,grid.len grid.len,grid.len = 0
 
-dirichlet 1,1 grid.len,grid.len = 1
+#dirichlet 1,1 grid.len,grid.len = 1
 
-cell grid.len/2+10,grid.len/2 initial -100000
+#cell grid.len/2+10,grid.len/2 initial -100000
 
