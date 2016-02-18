@@ -23,4 +23,4 @@ engine/solver.so: $(OBJECTS)
 	$(CC) $(CFLAGS) -MF $*.d -MMD -c $< -o $@
 
 clean:
-	-rm *.o solver.so
+	-rm $(OBJECTS) engine/solver.so solve
