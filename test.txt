@@ -1,0 +1,10 @@
+gridsize 300
+cell grid.len/2,grid.len/2 initial -100000
+neumann 100,100 100,200 left = 0.0
+
+# set the walls to 0
+dirichlet 1,1 1,grid.len = math.sin(y * math.pi / grid.len)
+dirichlet 1,1 grid.len,1 = 0
+dirichlet grid.len,1 grid.len,grid.len = 0
+dirichlet 1,grid.len grid.len,grid.len = 0
+
