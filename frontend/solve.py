@@ -67,21 +67,15 @@ if verifier != "":
 
 add_plot(result, "Computed result")
 
-#cax = fig.add_axes([0.12, 0.1, 0.78, 0.8])
-#cax.get_xaxis().set_visible(False)
-#cax.get_yaxis().set_visible(False)
-#cax.patch.set_alpha(0)
-#cax.set_frame_on(False)
 
 
-#factor = complex(0, grid.len)
+factor = complex(0, grid.len)
 
-#y, x = np.mgrid[0:100:factor, 0:100:factor]
-# need to make things negative
-#negative_result = [[-result[x][y] for y in range(grid.len)] for x in range(grid.len)]
-#v, u = np.gradient(negative_result)
-#fig, ax = plt.subplots()
-#scale = 1
-#ax.quiver(x[::scale, ::scale], y[::scale, ::scale], u[::scale, ::scale], v[::scale, ::scale], scale=1)
+y, x = np.mgrid[0:100:factor, 0:100:factor]
+negative_result = [[-result[x][y] for y in range(grid.len)] for x in range(grid.len)]
+v, u = np.gradient(negative_result)
+fig, ax = plt.subplots()
+scale = 1
+ax.quiver(x[::scale, ::scale], y[::scale, ::scale], u[::scale, ::scale], v[::scale, ::scale], scale=1)
 plt.show()
 

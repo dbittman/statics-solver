@@ -13,7 +13,7 @@ class SolverCell(Structure):
             ("initial", c_float),
             ("error", c_float),
             ("dirichlet_present", c_char),
-            ("neumann_present", c_char * 4),
+            ("neumann_present", c_byte * 4),
             ("neumann", c_float * 4)]
 
 

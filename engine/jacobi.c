@@ -9,9 +9,10 @@
 
 /* do we need to store error per cell? */
 
-static void cell_normal(struct grid *grid, int x, int y)
+static inline void cell_neumann(struct grid *grid, int x, int y)
 {
 	struct cell *cell = &grid->cells[x][y];
+	cell->value_prev = cell->value;
 	cell->value = 0.f;
 	if(y < grid->len-1)
 		cell->value += grid->cells[x][y+1].value_prev;
@@ -26,7 +27,26 @@ static void cell_normal(struct grid *grid, int x, int y)
 	cell->value /= 4.f;
 }
 
-static double do_cell(struct grid *grid, int x, int y)
+
+static inline void cell_normal(struct grid *grid, int x, int y)
+{
+	struct cell *cell = &grid->cells[x][y];
+	cell->value_prev = cell->value;
+	cell->value = 0.f;
+	if(y < grid->len-1)
+		cell->value += grid->cells[x][y+1].value_prev;
+	if(y > 0)
+		cell->value += grid->cells[x][y-1].value_prev;
+	if(x < grid->len-1)
+		cell->value += grid->cells[x+1][y].value_prev;
+	if(x > 0)
+		cell->value += grid->cells[x-1][y].value_prev;
+
+	cell->value += pow((1.0 / grid->len), 2.0) * cell->initial;
+	cell->value /= 4.f;
+}
+
+static inline double do_cell(struct grid *grid, int x, int y)
 {
 	struct cell *cell = &grid->cells[x][y];
 	double old = grid->cells[x][y].value;
@@ -62,21 +82,16 @@ double jacobi_solve(struct grid *grid)
 		
 		for(int x=0;x<grid->len;x++) {
 			for(int y=0;y<grid->len;y++) {
-				grid->cells[x][y].value_prev = grid->cells[x][y].value;
-			}
-		}
-		for(int x=0;x<grid->len;x++) {
-			for(int y=0;y<grid->len;y++) {
 				iter_err += do_cell(grid, x, y);
 			}
 		}
 		
 		iter_err /= pow(grid->len, 2.0);
 		if((++iter % 100) == 0) {
-			printf("%d: err: %lf\r", iter, iter_err);
+			printf("%d: err: %.15lf\r", iter, iter_err);
 			fflush(stdout);
 		}
-	} while(iter_err >= 0.000001);
+	} while(iter_err >= 0.0000001);
 	grid->iters = iter;
 	printf("\n");
 	return iter_err;

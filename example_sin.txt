@@ -15,3 +15,4 @@ dirichlet 1,grid.len grid.len,grid.len = 0
 #cell grid.len/2+11,grid.len/2+1 initial -100000
 #cell grid.len/2+10,grid.len/2+1 initial -100000
 
+neumann 100,1 100,grid.len top = 0
