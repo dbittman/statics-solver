@@ -43,9 +43,8 @@ def parse_neumann(grid, tokens):
     direc = directions[tokens[3]]
     print(" * Setting Neumann " + str(sx) + "," + str(sy) + " through " + str(ex) + "," + str(ey) + " along " + tokens[3] + " to " + expr)
     for x,y in set([(int(sx + inc*ix), int(sy + inc*iy)) for inc in range(0, dist+1)]):
-        grid.neumanns[direc].contents[x-1][y-1] = eval(expr)
+        grid.neumanns[direc][x-1][y-1] = eval(expr)
         grid.neumann_presents[x-1][y-1] |= (1 << direc)
-        print("NEUPR = " + str(grid.neumann_presents[x-1][y-1]))
 
         mirrorx = x-1
         mirrory = y-1
@@ -58,7 +57,7 @@ def parse_neumann(grid, tokens):
         else:
             mirrorx -= 1
         if mirrorx >= 0 and mirrorx < grid.len and mirrory >= 0 and mirrory < grid.len:
-            grid.neumanns[(direc + 2) % 4].contents[mirrorx][mirrory] = eval(expr)
+            grid.neumanns[(direc + 2) % 4][mirrorx][mirrory] = eval(expr)
             grid.neumann_presents[mirrorx][mirrory] |= (1 << ((direc+2) % 4))
 
 

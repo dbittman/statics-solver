@@ -12,48 +12,46 @@
 /* do we need to store error per cell? */
 
 struct params {
-	const float omega;
+	const float omega, prefix1, prefix2;
 	const float h;
 } *params;
 
 #include <assert.h>
 static inline void cell_neumann(struct grid *grid, int x, int y)
 {
-#if 0
-	register float value_prev = (*grid->values)[x][y];
-	(*grid->values)[x][y] = 0;
-	if(grid->neumann_presents) {
-		(*grid->values)[x][y] += value_prev;
-		(*grid->values)[x][y] -= params->h * cell->neumann[DOWN];
+	register float value_prev = grid->values[x][y];
+	grid->values[x][y] = 0;
+	if(grid->neumann_presents[x][y] & (1 << DOWN)) {
+		grid->values[x][y] += value_prev;
+		grid->values[x][y] -= params->h * grid->neumanns[DOWN][x][y];
 	} else {
-		(*grid->values)[x][y] += (*grid->values)[x][y+1];
+		grid->values[x][y] += grid->values[x][y+1];
 	}
 
-	if(cell->neumann_present[UP]) {
-		(*grid->values)[x][y] += value_prev;
-		(*grid->values)[x][y] -= params->h * cell->neumann[UP];
+	if(grid->neumann_presents[x][y] & (1 << UP)) {
+		grid->values[x][y] += value_prev;
+		grid->values[x][y] -= params->h * grid->neumanns[UP][x][y];
 	} else {
-		(*grid->values)[x][y] += (*grid->values)[x][y-1];
+		grid->values[x][y] += grid->values[x][y-1];
 	}
 
-	if(cell->neumann_present[RIGHT]) {
-		(*grid->values)[x][y] += value_prev;
-		(*grid->values)[x][y] -= params->h * cell->neumann[RIGHT];
+	if(grid->neumann_presents[x][y] & (1 << RIGHT)) {
+		grid->values[x][y] += value_prev;
+		grid->values[x][y] -= params->h * grid->neumanns[RIGHT][x][y];
 	} else {
-		(*grid->values)[x][y] += (*grid->values)[x+1][y];
+		grid->values[x][y] += grid->values[x+1][y];
 	}
 
-	if(cell->neumann_present[LEFT]) {
-		(*grid->values)[x][y] += value_prev;
-		(*grid->values)[x][y] -= params->h * cell->neumann[LEFT];
+	if(grid->neumann_presents[x][y] & (1 << LEFT)) {
+		grid->values[x][y] += value_prev;
+		grid->values[x][y] -= params->h * grid->neumanns[LEFT][x][y];
 	} else {
-		(*grid->values)[x][y] += (*grid->values)[x-1][y];
+		grid->values[x][y] += grid->values[x-1][y];
 	}
 
-	(*grid->values)[x][y] += pow(params->h, 2.0) * cell->initial;
-	(*grid->values)[x][y] *= params->omega / 4.f;
-	(*grid->values)[x][y] += (1.f - params->omega) * value_prev;
-#endif
+	grid->values[x][y] += pow(params->h, 2.0) * grid->initials[x][y];
+	grid->values[x][y] *= params->omega / 4.f;
+	grid->values[x][y] += (1.f - params->omega) * value_prev;
 }
 
 static inline float sum(__m256 x) {
@@ -69,20 +67,28 @@ static inline float sum(__m256 x) {
 
 static inline void cell_normal(struct grid *grid, int x, int y)
 {
-	__mmask8 mask = 0xF;
-
-	__attribute__((aligned(16))) float vec[8] = {
+#if 0
+	__m256 v1 = _mm256_set_ps(
 		grid->values[x][y+1],
 		grid->values[x][y-1],
-		grid->values[x+1][y],
-		grid->values[x-1][y],
 		params->h * grid->initials[x][y],
-		((1.f - params->omega) / (params->omega / 4.)) * grid->values[x][y], 0., 0.
-	};
-	__m256 v1 = _mm256_load_ps(vec);
-	__m256 scal = _mm256_set1_ps(params->omega / 4.f);
+		grid->values[x-1][y],
+		params->prefix1 * grid->values[x][y],
+		grid->values[x+1][y],
+		0., 0.);
+	
+	__m256 scal = _mm256_set1_ps(params->prefix2);
 	__m256 res = _mm256_mul_ps(v1, scal);
 	grid->values[x][y] = sum(res);
+#else
+	float value = grid->values[x][y+1];
+	value += grid->values[x][y-1];
+	value += grid->values[x-1][y];
+	value += grid->values[x+1][y];
+	value += params->h * grid->initials[x][y];
+	value *= params->omega / 4.;
+	grid->values[x][y] = value + (1.f - params->omega) * grid->values[x][y];
+#endif
 }
 
 static inline double do_cell(struct grid *grid, int x, int y)
@@ -115,7 +121,13 @@ double sor_solve(struct grid *grid)
 		}
 	}
 	params = malloc(sizeof(struct params));
-	struct params init = { .omega = 2.f / (1.f + M_PI / grid->len), .h = pow((1.f / grid->len), 2.0) };
+	float omega = 2.f / (1.f + M_PI / grid->len);
+	struct params init = { 
+		.omega = omega,
+		.h = pow((1.f / grid->len), 2.0),
+		.prefix2 = omega / 4.,
+		.prefix1 = (1.f - omega) / (omega / 4.),
+	};
 	memcpy(params, &init, sizeof(init));
 	printf("omega = %f\n", params->omega);
 	do {

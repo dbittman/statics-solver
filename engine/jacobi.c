@@ -11,90 +11,83 @@
 /* do we need to store error per cell? */
 static inline void cell_neumann(struct grid *grid, int x, int y)
 {
-	struct cell *cell = &grid->cells[x][y];
 	float h = 1.0 / grid->len;
-	cell->value_prev = cell->value;
-	cell->value = 0;
-	if(cell->neumann_present[DOWN]) {
-		cell->value += cell->value_prev;
-		cell->value -= h * cell->neumann[DOWN];
+	grid->value_prevs[x][y] = grid->values[x][y];
+	grid->values[x][y] = 0;
+	if(grid->neumann_presents[x][y] & (1 << DOWN)) {
+		grid->values[x][y] += grid->value_prevs[x][y];
+		grid->values[x][y] -= h * grid->neumanns[x][y][DOWN];
 	} else {
 		if(y < grid->len-1)
-			cell->value += grid->cells[x][y+1].value;
+			grid->values[x][y] += grid->values[x][y+1];
 	}
 
-	if(cell->neumann_present[UP]) {
-		cell->value += cell->value_prev;
-		cell->value -= h * cell->neumann[UP];
+	if(grid->neumann_presents[x][y] & (1 << UP)) {
+		grid->values[x][y] += grid->value_prevs[x][y];
+		grid->values[x][y] -= h * grid->neumanns[x][y][UP];
 	} else {
 		if(y > 0)
-			cell->value += grid->cells[x][y-1].value_prev;
+			grid->values[x][y] += grid->value_prevs[x][y-1];
 	}
 
-	if(cell->neumann_present[RIGHT]) {
-		cell->value += cell->value_prev;
-		cell->value -= h * cell->neumann[RIGHT];
+	if(grid->neumann_presents[x][y] & (1 << RIGHT)) {
+		grid->values[x][y] += grid->value_prevs[x][y];
+		grid->values[x][y] -= h * grid->neumanns[x][y][RIGHT];
 	} else {
 		if(x < grid->len-1)
-			cell->value += grid->cells[x+1][y].value;
+			grid->values[x][y] += grid->values[x+1][y];
 	}
 
-	if(cell->neumann_present[LEFT]) {
-		cell->value += cell->value_prev;
-		cell->value -= h * cell->neumann[LEFT];
+	if(grid->neumann_presents[x][y] & (1 << LEFT)) {
+		grid->values[x][y] += grid->value_prevs[x][y];
+		grid->values[x][y] -= h * grid->neumanns[x][y][LEFT];
 	} else {
 		if(x > 0)
-			cell->value += grid->cells[x-1][y].value_prev;
+			grid->values[x][y] += grid->value_prevs[x-1][y];
 	}
 
-	cell->value += pow(h, 2.0) * cell->initial;
-	cell->value /= 4.f;
+	grid->values[x][y] += pow(h, 2.0) * grid->initials[x][y];
+	grid->values[x][y] /= 4.f;
 }
 
 static inline void cell_normal(struct grid *grid, int x, int y)
 {
-	struct cell *cell = &grid->cells[x][y];
-	cell->value_prev = cell->value;
-	cell->value = 0.f;
+	grid->value_prevs[x][y] = grid->values[x][y];
+	grid->values[x][y] = 0.f;
 	if(y < grid->len-1)
-		cell->value += grid->cells[x][y+1].value;
+		grid->values[x][y] += grid->values[x][y+1];
 	if(y > 0)
-		cell->value += grid->cells[x][y-1].value_prev;
+		grid->values[x][y] += grid->value_prevs[x][y-1];
 	if(x < grid->len-1)
-		cell->value += grid->cells[x+1][y].value;
+		grid->values[x][y] += grid->values[x+1][y];
 	if(x > 0)
-		cell->value += grid->cells[x-1][y].value_prev;
+		grid->values[x][y] += grid->value_prevs[x-1][y];
 
-	cell->value += pow((1.0 / grid->len), 2.0) * cell->initial;
-	cell->value /= 4.f;
+	grid->values[x][y] += pow((1.0 / grid->len), 2.0) * grid->initials[x][y];
+	grid->values[x][y] /= 4.f;
 }
 
 static inline double do_cell(struct grid *grid, int x, int y)
 {
-	struct cell *cell = &grid->cells[x][y];
-	double old = grid->cells[x][y].value;
-	if(cell->dirichlet_present) {
-		cell->value_prev = cell->value = cell->dirichlet;
+	if(grid->dirichlet_presents[x][y]) {
+		grid->value_prevs[x][y] = grid->values[x][y] = grid->dirichlets[x][y];
 		return 0.f;
 	}
 	if(x == 0 || y == 0 || x == grid->len-1 || y == grid->len-1)
 		return 0.f;
-	bool any_neumann = false;
-	for(int i=0;i<4;++i) {
-		any_neumann = any_neumann || cell->neumann_present[i];
-	}
-	if(!any_neumann) {
+	double old = grid->values[x][y];
+	if(!grid->neumann_presents[x][y]) {
 		/* do the thing! */
 		cell_normal(grid, x, y);
-		return pow(old - grid->cells[x][y].value, 2.0);
+		return pow(old - grid->values[x][y], 2.0);
 	} else {
 		cell_neumann(grid, x, y);
-		return pow(old - grid->cells[x][y].value, 2.0);
+		return pow(old - grid->values[x][y], 2.0);
 	}
 }
 
 _Atomic double thresh = 0.00001;
-#define THREADS 1
+#define THREADS 0
 
 #if THREADS
 
@@ -152,7 +145,7 @@ double jacobi_solve(struct grid *grid)
 	ptit=0;
 	for(int x=0;x<grid->len;x++) {
 		for(int y=0;y<grid->len;y++) {
-			grid->cells[x][y].value = 0.f;
+			grid->values[x][y] = 0.f;
 		}
 	}
 
@@ -187,7 +180,7 @@ double jacobi_solve(struct grid *grid)
 	double iter_err;
 	for(int x=0;x<grid->len;x++) {
 		for(int y=0;y<grid->len;y++) {
-			grid->cells[x][y].value = 0.f;
+			grid->values[x][y] = 0.f;
 		}
 	}
 	do {

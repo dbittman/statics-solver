@@ -1,5 +1,5 @@
 # specify grid size
-gridsize 100
+gridsize 1000
 # create a dirichlet boundary condition along the left wall.
 dirichlet 1,1 1,grid.len = math.sin(y * math.pi / grid.len)
 

@@ -23,7 +23,7 @@ void sigint(int sig)
 }
 
 static double (*solvers[])(struct grid *) = {
-	NULL, //jacobi_solve,
+	jacobi_solve,
 	sor_solve,
 	NULL,
 	NULL
