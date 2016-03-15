@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-
+#include <stdint.h>
 extern _Atomic bool stop;
 
 struct cell {
@@ -18,6 +18,12 @@ struct cell {
 struct grid {
 	int len;
 	int iters;
-	struct cell *cells[];
+	float **values;
+	float **value_prevs;
+	float **initials;
+	uint8_t **dirichlet_presents;
+	float **dirichlets;
+	uint8_t **neumann_presents;
+	float **neumanns[4];
 };
 

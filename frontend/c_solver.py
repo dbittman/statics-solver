@@ -5,31 +5,25 @@ SOLVER_SOR    = c_int(1)
 SOLVER_FFT    = c_int(2)
 SOLVER_MAGIC  = c_int(3)
 
-class SolverCell(Structure):
-    _fields_ = [
-            ("value", c_float),
-            ("value_prev", c_float),
-            ("dirichlet", c_float),
-            ("initial", c_float),
-            ("dirichlet_present", c_char),
-            ("neumann_present", c_byte * 4),
-            ("neumann", c_float * 4)]
-
-
+_solver = CDLL("./engine/solver.so")
 def SolverGrid_factory(length):
     class SolverGrid(Structure):
         _fields_ = [
                 ("len", c_int),
                 ("iters", c_int),
-                ("cells", POINTER(SolverCell * length) * length)]
+                ("values", POINTER(POINTER(c_float))),
+                ("value_prevs", POINTER(POINTER(c_float))),
+                ("initials", POINTER(POINTER(c_float))),
+                ("dirichlet_presents", POINTER(POINTER(c_byte))),
+                ("dirichlets", POINTER(POINTER(c_float))),
+                ("neumann_presents", POINTER(POINTER(c_byte))),
+                ("neumanns", (POINTER(POINTER(c_float)) * 4))
+                ]
     g = SolverGrid()
     g.len = length
-    Line = SolverCell * length
-    for i in range(length):
-        g.cells[i] = pointer(Line())
+    _solver.init_grid(byref(g))
     return g
 
-_solver = CDLL("./engine/solver.so")
 solve_call = _solver.solve
 solve_call.restype = c_double
 def solve(grid, method):
@@ -39,5 +33,5 @@ def reduce_to_array(grid):
     arr = [[0.0 for x in range(grid.len)] for x in range(grid.len)]
     for x in range(0, grid.len):
         for y in range(0, grid.len):
-            arr[x][y] = grid.cells[x].contents[y].value
+            arr[x][y] = grid.values[x][y]
     return arr

@@ -94,7 +94,7 @@ static inline double do_cell(struct grid *grid, int x, int y)
 }
 
 _Atomic double thresh = 0.00001;
-#define THREADS 12
+#define THREADS 1
 
 #if THREADS
 
@@ -111,7 +111,7 @@ double cur_err, iter_err;
 _Atomic int cur_iter;
 _Atomic int ptit;
 
-#define NUM_THREADS 1
+#define NUM_THREADS 4
 
 void *thread_main(void *arg)
 {

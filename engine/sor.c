@@ -1,91 +1,106 @@
 #include <stdbool.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 #include "grid.h"
 #define UP 0
 #define RIGHT 1
 #define DOWN 2
 #define LEFT 3
-
+#include <pmmintrin.h>
+#include <immintrin.h>
 /* do we need to store error per cell? */
 
-static float omega = 1.5;
+struct params {
+	const float omega;
+	const float h;
+} *params;
+
 #include <assert.h>
 static inline void cell_neumann(struct grid *grid, int x, int y)
 {
-	struct cell *cell = &grid->cells[x][y];
-	float h = 1.0 / grid->len;
-	register float value_prev = cell->value;
-	cell->value = 0;
-	if(cell->neumann_present[DOWN]) {
-		cell->value += value_prev;
-		cell->value -= h * cell->neumann[DOWN];
+#if 0
+	register float value_prev = (*grid->values)[x][y];
+	(*grid->values)[x][y] = 0;
+	if(grid->neumann_presents) {
+		(*grid->values)[x][y] += value_prev;
+		(*grid->values)[x][y] -= params->h * cell->neumann[DOWN];
 	} else {
-		cell->value += grid->cells[x][y+1].value;
+		(*grid->values)[x][y] += (*grid->values)[x][y+1];
 	}
 
 	if(cell->neumann_present[UP]) {
-		cell->value += value_prev;
-		cell->value -= h * cell->neumann[UP];
+		(*grid->values)[x][y] += value_prev;
+		(*grid->values)[x][y] -= params->h * cell->neumann[UP];
 	} else {
-		cell->value += grid->cells[x][y-1].value;
+		(*grid->values)[x][y] += (*grid->values)[x][y-1];
 	}
 
 	if(cell->neumann_present[RIGHT]) {
-		cell->value += value_prev;
-		cell->value -= h * cell->neumann[RIGHT];
+		(*grid->values)[x][y] += value_prev;
+		(*grid->values)[x][y] -= params->h * cell->neumann[RIGHT];
 	} else {
-		cell->value += grid->cells[x+1][y].value;
+		(*grid->values)[x][y] += (*grid->values)[x+1][y];
 	}
 
 	if(cell->neumann_present[LEFT]) {
-		cell->value += value_prev;
-		cell->value -= h * cell->neumann[LEFT];
+		(*grid->values)[x][y] += value_prev;
+		(*grid->values)[x][y] -= params->h * cell->neumann[LEFT];
 	} else {
-		cell->value += grid->cells[x-1][y].value;
+		(*grid->values)[x][y] += (*grid->values)[x-1][y];
 	}
 
-	cell->value += pow(h, 2.0) * cell->initial;
-	cell->value *= omega / 4.f;
-	cell->value += (1.f - omega) * value_prev;
+	(*grid->values)[x][y] += pow(params->h, 2.0) * cell->initial;
+	(*grid->values)[x][y] *= params->omega / 4.f;
+	(*grid->values)[x][y] += (1.f - params->omega) * value_prev;
+#endif
+}
+
+static inline float sum(__m256 x) {
+	__m128 hi = _mm256_extractf128_ps(x, 1);
+	__m128 lo = _mm256_extractf128_ps(x, 0);
+	lo = _mm_add_ps(hi, lo);
+	hi = _mm_movehl_ps(hi, lo);
+	lo = _mm_add_ps(hi, lo);
+	hi = _mm_shuffle_ps(lo, lo, 1);
+	lo = _mm_add_ss(hi, lo);
+	return _mm_cvtss_f32(lo);
 }
 
 static inline void cell_normal(struct grid *grid, int x, int y)
 {
-	struct cell *cell = &grid->cells[x][y];
-	register float value_prev = cell->value;
-	cell->value = 0;
-	cell->value += grid->cells[x][y+1].value;
-	cell->value += grid->cells[x][y-1].value;
-	cell->value += grid->cells[x+1][y].value;
-	cell->value += grid->cells[x-1][y].value;
+	__mmask8 mask = 0xF;
 
-	cell->value += pow((1.0 / grid->len), 2.0) * cell->initial;
-	cell->value *= omega / 4.f;
-	cell->value += (1.f - omega) * value_prev;
+	__attribute__((aligned(16))) float vec[8] = {
+		grid->values[x][y+1],
+		grid->values[x][y-1],
+		grid->values[x+1][y],
+		grid->values[x-1][y],
+		params->h * grid->initials[x][y],
+		((1.f - params->omega) / (params->omega / 4.)) * grid->values[x][y], 0., 0.
+	};
+	__m256 v1 = _mm256_load_ps(vec);
+	__m256 scal = _mm256_set1_ps(params->omega / 4.f);
+	__m256 res = _mm256_mul_ps(v1, scal);
+	grid->values[x][y] = sum(res);
 }
 
 static inline double do_cell(struct grid *grid, int x, int y)
 {
-	struct cell *cell = &grid->cells[x][y];
-	double old = grid->cells[x][y].value;
-	if(cell->dirichlet_present) {
-		cell->value = cell->dirichlet;
+	if(grid->dirichlet_presents[x][y]) {
+		grid->values[x][y] = grid->dirichlets[x][y];
 		return 0.f;
 	}
 	if(x == 0 || y == 0 || x == grid->len-1 || y == grid->len-1)
 		return 0.f;
-	bool any_neumann = false;
-	for(int i=0;i<4;++i) {
-		any_neumann = any_neumann || cell->neumann_present[i];
-	}
-	if(!any_neumann) {
+	float old = grid->values[x][y];
+	if(!grid->neumann_presents[x][y]) {
 		/* do the thing! */
 		cell_normal(grid, x, y);
-		return pow(old - grid->cells[x][y].value, 2.0);
+		return pow(old - grid->values[x][y], 2.0);
 	} else {
 		cell_neumann(grid, x, y);
-		return pow(old - grid->cells[x][y].value, 2.0);
+		return pow(old - grid->values[x][y], 2.0);
 	}
 }
 
@@ -96,11 +111,13 @@ double sor_solve(struct grid *grid)
 	double thresh = 0.0000001;
 	for(int x=0;x<grid->len;x++) {
 		for(int y=0;y<grid->len;y++) {
-			grid->cells[x][y].value = grid->cells[x][y].value_prev = 0.f;
+			grid->values[x][y] = grid->value_prevs[x][y] = 0.f;
 		}
 	}
-	omega = 2.f / (1.f + M_PI / grid->len);
-	printf("omega = %f\n", omega);
+	params = malloc(sizeof(struct params));
+	struct params init = { .omega = 2.f / (1.f + M_PI / grid->len), .h = pow((1.f / grid->len), 2.0) };
+	memcpy(params, &init, sizeof(init));
+	printf("omega = %f\n", params->omega);
 	do {
 		iter_err = 0.f;
 		for(int x=0;x<grid->len;x++) {

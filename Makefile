@@ -1,8 +1,8 @@
-CFLAGS=-O3 -std=gnu11 -fPIC -march=native -Wall -Wextra
+CFLAGS=-Ofast -std=gnu11 -fPIC -march=native -Wall -Wextra -msse3 -ffast-math -g
 LDFLAGS=-shared -lpthread
-CC=clang
+CC=gcc
 
-SOURCES=engine/main.c engine/jacobi.c engine/sor.c
+SOURCES=engine/main.c engine/sor.c
 OBJECTS=$(SOURCES:.c=.o)
 DEPS=$(SOURCES:.c=.d)
 

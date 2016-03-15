@@ -10,7 +10,7 @@ def parse_coords(grid, token):
 def parse_cell(grid, tokens):
     x,y = parse_coords(grid, tokens[1])
     print(" * Set cell " + str(x) + "," + str(y) + " initial to " + tokens[3])
-    grid.cells[x-1].contents[y-1].initial = float(tokens[3])
+    grid.initials[x-1][y-1] = float(tokens[3])
 
 def parse_dirichlet(grid, tokens):
     # WARNING - off-by-one error central in here!
@@ -22,8 +22,8 @@ def parse_dirichlet(grid, tokens):
     expr = ' '.join(str(tok) for tok in tokens[4:])
     print(" * Setting Dirichlet " + str(sx) + "," + str(sy) + " through " + str(ex) + "," + str(ey) + " to " + expr)
     for x,y in set([(int(sx + inc*ix), int(sy + inc*iy)) for inc in range(0, dist+1)]):
-        grid.cells[x-1].contents[y-1].dirichlet = eval(expr)
-        grid.cells[x-1].contents[y-1].dirichlet_present = 1
+        grid.dirichlets[x-1][y-1] = eval(expr)
+        grid.dirichlet_presents[x-1][y-1] = 1
 
 directions = {
         'top':0,
@@ -43,8 +43,9 @@ def parse_neumann(grid, tokens):
     direc = directions[tokens[3]]
     print(" * Setting Neumann " + str(sx) + "," + str(sy) + " through " + str(ex) + "," + str(ey) + " along " + tokens[3] + " to " + expr)
     for x,y in set([(int(sx + inc*ix), int(sy + inc*iy)) for inc in range(0, dist+1)]):
-        grid.cells[x-1].contents[y-1].neumann[direc] = eval(expr)
-        grid.cells[x-1].contents[y-1].neumann_present[direc] = 1
+        grid.neumanns[direc].contents[x-1][y-1] = eval(expr)
+        grid.neumann_presents[x-1][y-1] |= (1 << direc)
+        print("NEUPR = " + str(grid.neumann_presents[x-1][y-1]))
 
         mirrorx = x-1
         mirrory = y-1
@@ -57,8 +58,8 @@ def parse_neumann(grid, tokens):
         else:
             mirrorx -= 1
         if mirrorx >= 0 and mirrorx < grid.len and mirrory >= 0 and mirrory < grid.len:
-            grid.cells[mirrorx].contents[mirrory].neumann[(direc + 2) % 4] = eval(expr)
-            grid.cells[mirrorx].contents[mirrory].neumann_present[(direc+2) % 4] = 1
+            grid.neumanns[(direc + 2) % 4].contents[mirrorx][mirrory] = eval(expr)
+            grid.neumann_presents[mirrorx][mirrory] |= (1 << ((direc+2) % 4))
 
 
 parsers = {
