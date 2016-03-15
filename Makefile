@@ -1,5 +1,5 @@
-CFLAGS=-O3 -std=gnu11 -fPIC
-LDFLAGS=-shared
+CFLAGS=-O3 -std=gnu11 -fPIC -march=native -Wall -Wextra
+LDFLAGS=-shared -lpthread
 CC=clang
 
 SOURCES=engine/main.c engine/jacobi.c engine/sor.c

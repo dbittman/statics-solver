@@ -11,7 +11,6 @@ class SolverCell(Structure):
             ("value_prev", c_float),
             ("dirichlet", c_float),
             ("initial", c_float),
-            ("error", c_float),
             ("dirichlet_present", c_char),
             ("neumann_present", c_byte * 4),
             ("neumann", c_float * 4)]

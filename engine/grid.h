@@ -3,12 +3,13 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+extern _Atomic bool stop;
+
 struct cell {
 	float value;
 	float value_prev;
 	float dirichlet;
 	float initial;
-	float error;
 	char dirichlet_present;
 	char neumann_present[4];
 	float neumann[4];

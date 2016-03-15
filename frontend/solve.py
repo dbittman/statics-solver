@@ -58,9 +58,10 @@ if verifier != "":
         err = 0.0
         for y in range(len(correct)):
             for x in range(len(correct[0])):
-                err += abs(correct[y][x] - result[y][x])
-        err = err / len(correct) ** 2
-        print("Total error = " + str(err))
+                err += (pow(delta[y][x], 2.0)) / (pow(res, 2.0) * len(correct) ** 2)
+        print(":: " + str(pow(res, 2.0)))
+        err = err / (len(correct) ** 2)
+        print("red. Chi-square = " + str(err))
         add_plot(correct, "Exact result")
         add_plot(delta, "Difference")
 
@@ -71,11 +72,11 @@ add_plot(result, "Computed result")
 
 factor = complex(0, grid.len)
 
-y, x = np.mgrid[0:100:factor, 0:100:factor]
-negative_result = [[-result[x][y] for y in range(grid.len)] for x in range(grid.len)]
-v, u = np.gradient(negative_result)
-fig, ax = plt.subplots()
-scale = 1
-ax.quiver(x[::scale, ::scale], y[::scale, ::scale], u[::scale, ::scale], v[::scale, ::scale], scale=1)
+#y, x = np.mgrid[0:100:factor, 0:100:factor]
+#negative_result = [[-result[x][y] for y in range(grid.len)] for x in range(grid.len)]
+#v, u = np.gradient(negative_result)
+#fig, ax = plt.subplots()
+#scale = 1
+#ax.quiver(x[::scale, ::scale], y[::scale, ::scale], u[::scale, ::scale], v[::scale, ::scale], scale=1)
 plt.show()
 
