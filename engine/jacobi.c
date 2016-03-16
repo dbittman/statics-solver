@@ -16,7 +16,7 @@ static inline void cell_neumann(struct grid *grid, int x, int y)
 	grid->values[x][y] = 0;
 	if(grid->neumann_presents[x][y] & (1 << DOWN)) {
 		grid->values[x][y] += grid->value_prevs[x][y];
-		grid->values[x][y] -= h * grid->neumanns[x][y][DOWN];
+		grid->values[x][y] -= h * grid->neumanns[DOWN][x][y];
 	} else {
 		if(y < grid->len-1)
 			grid->values[x][y] += grid->values[x][y+1];
@@ -24,7 +24,7 @@ static inline void cell_neumann(struct grid *grid, int x, int y)
 
 	if(grid->neumann_presents[x][y] & (1 << UP)) {
 		grid->values[x][y] += grid->value_prevs[x][y];
-		grid->values[x][y] -= h * grid->neumanns[x][y][UP];
+		grid->values[x][y] -= h * grid->neumanns[UP][x][y];
 	} else {
 		if(y > 0)
 			grid->values[x][y] += grid->value_prevs[x][y-1];
@@ -32,7 +32,7 @@ static inline void cell_neumann(struct grid *grid, int x, int y)
 
 	if(grid->neumann_presents[x][y] & (1 << RIGHT)) {
 		grid->values[x][y] += grid->value_prevs[x][y];
-		grid->values[x][y] -= h * grid->neumanns[x][y][RIGHT];
+		grid->values[x][y] -= h * grid->neumanns[RIGHT][x][y];
 	} else {
 		if(x < grid->len-1)
 			grid->values[x][y] += grid->values[x+1][y];
@@ -40,7 +40,7 @@ static inline void cell_neumann(struct grid *grid, int x, int y)
 
 	if(grid->neumann_presents[x][y] & (1 << LEFT)) {
 		grid->values[x][y] += grid->value_prevs[x][y];
-		grid->values[x][y] -= h * grid->neumanns[x][y][LEFT];
+		grid->values[x][y] -= h * grid->neumanns[LEFT][x][y];
 	} else {
 		if(x > 0)
 			grid->values[x][y] += grid->value_prevs[x-1][y];
@@ -86,7 +86,7 @@ static inline double do_cell(struct grid *grid, int x, int y)
 	}
 }
 
-_Atomic double thresh = 0.00001;
+static _Atomic double thresh = 0.00001;
 #define THREADS 0
 
 #if THREADS
@@ -120,7 +120,7 @@ void *thread_main(void *arg)
 			
 			//fprintf(stderr, "pos %d reset\n", args->pos);
 			iter_err = sqrt(cur_err);// / pow(args->grid->len, 2.0);
-			if(cur_iter++ % 100 == 0) {
+			if(cur_iter++ % 100 == 0 && cur_iter > 0) {
 				printf("%d: err: %.15lf\r", cur_iter, iter_err);
 				fflush(stdout);
 				if(iter_err < thresh) {

@@ -1,4 +1,4 @@
-CFLAGS=-Ofast -std=gnu11 -fPIC -march=native -Wall -Wextra -msse3 -ffast-math -g -mavx
+CFLAGS=-Ofast -std=gnu11 -fPIC -Wall -Wextra -g -ffast-math -fassociative-math -msse -msse2 -mssse3 -mavx
 LDFLAGS=-shared -lpthread
 CC=gcc
 
