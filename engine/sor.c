@@ -11,6 +11,8 @@
 #include <immintrin.h>
 /* do we need to store error per cell? */
 #define VECTORIZE 1
+#define THREADS 1
+#define NUM_THREADS 4
 struct params {
 	const float omega, prefix1, prefix2;
 	const float h, h_square;
@@ -172,7 +174,6 @@ void init_params(struct grid *grid)
 
 
 static _Atomic double thresh = 0.00001;
-#define THREADS 1
 
 #if THREADS
 
@@ -189,7 +190,6 @@ double cur_err, iter_err;
 _Atomic int cur_iter;
 _Atomic int ptit;
 
-#define NUM_THREADS 4
 
 void *thread_main(void *arg)
 {

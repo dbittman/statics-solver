@@ -13,8 +13,8 @@ methods = { "jacobi" : c_solver.SOLVER_JACOBI, "sor" : c_solver.SOLVER_SOR, "fft
 
 method = methods["jacobi"]
 verifier = ""
-opts, args = getopt.getopt(sys.argv[1:], "m:v:")
-
+opts, args = getopt.getopt(sys.argv[1:], "m:v:V")
+vector = False
 def add_plot(obj, title):
     fig = plt.figure(figsize=(6, 3.2))
     ax = fig.add_subplot(111)
@@ -35,6 +35,8 @@ for opt, arg in opts:
             raise Exception('Method ' + arg + ' unknown.')
     if opt == '-v':
         verifier = arg
+    if opt == '-V':
+        vector = True
 
 grid = parse.create_grid(args[0])
 if grid == 0:
@@ -71,12 +73,13 @@ add_plot(result, "Computed result")
 
 
 factor = complex(0, grid.len)
+if vector:
+    y, x = np.mgrid[0:100:factor, 0:100:factor]
+    negative_result = [[-result[grid.len - (x+1)][y] / 10000 for y in range(grid.len)] for x in range(grid.len)]
+    v, u = np.gradient(negative_result)
+    fig, ax = plt.subplots()
+    scale = 1
+    ax.quiver(x[::scale, ::scale], y[::scale, ::scale], u[::scale, ::scale], v[::scale, ::scale], scale=1)
 
-#y, x = np.mgrid[0:100:factor, 0:100:factor]
-#negative_result = [[-result[x][y] for y in range(grid.len)] for x in range(grid.len)]
-#v, u = np.gradient(negative_result)
-#fig, ax = plt.subplots()
-#scale = 1
-#ax.quiver(x[::scale, ::scale], y[::scale, ::scale], u[::scale, ::scale], v[::scale, ::scale], scale=1)
 plt.show()
 
