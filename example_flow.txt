@@ -1,0 +1,6 @@
+gridsize 300
+#dirichlet 1,1 100,1 = 10
+#dirichlet grid.len-100,grid.len grid.len,grid.len = -10
+
+neumann 1,1 100,1 right = -50.0
+neumann 1,grid.len 100,grid.len left = 50.0

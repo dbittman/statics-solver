@@ -1,0 +1,5 @@
+gridsize 300
+
+cell grid.len/2+10,grid.len/2 initial -100000
+neumann 100,1 100,grid.len left = 0.0
+

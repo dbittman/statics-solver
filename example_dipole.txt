@@ -1,0 +1,7 @@
+gridsize 300
+
+cell 100,100 initial 1000000
+cell 100,110 initial -1000000
+
+#cell 200,200 initial 1000000
+#cell 200,250 initial -1000000
