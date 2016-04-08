@@ -13,8 +13,9 @@ methods = { "jacobi" : c_solver.SOLVER_JACOBI, "sor" : c_solver.SOLVER_SOR, "fft
 
 method = methods["jacobi"]
 verifier = ""
-opts, args = getopt.getopt(sys.argv[1:], "m:v:V")
+opts, args = getopt.getopt(sys.argv[1:], "m:v:Vp")
 vector = False
+do_exit = False
 def add_plot(obj, title):
     fig = plt.figure(figsize=(6, 3.2))
     ax = fig.add_subplot(111)
@@ -37,12 +38,16 @@ for opt, arg in opts:
         verifier = arg
     if opt == '-V':
         vector = True
+    if opt == '-p':
+        do_exit = True
 
 grid = parse.create_grid(args[0])
 if grid == 0:
     raise Exception('Input file is incomplete')
 
 res = c_solver.solve(grid, method)
+if do_exit:
+    sys.exit(0)
 if math.isnan(res):
     sys.exit(1)
 result = c_solver.reduce_to_array(grid)

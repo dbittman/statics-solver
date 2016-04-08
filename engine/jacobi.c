@@ -86,7 +86,7 @@ static inline double do_cell(struct grid *grid, int x, int y)
 	}
 }
 
-static _Atomic double thresh = 0.00001;
+static _Atomic double thresh = 0.000001;
 #define THREADS 0
 
 #if THREADS
@@ -192,8 +192,8 @@ double jacobi_solve(struct grid *grid)
 			}
 		}
 		//iter_err /= pow(grid->len, 2.0);
-		if((++iter % 100) == 0) {
-			printf("%d: err: %.15lf\r", iter, iter_err);
+		if((++iter % 10) == 0) {
+			printf("%d: err: %.15lf\n", iter, iter_err);
 			fflush(stdout);
 			if(stop)
 				break;

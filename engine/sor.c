@@ -11,7 +11,7 @@
 #include <immintrin.h>
 /* do we need to store error per cell? */
 #define VECTORIZE 1
-#define THREADS 1
+#define THREADS 0
 #define NUM_THREADS 4
 struct params {
 	const float omega, prefix1, prefix2;
@@ -173,7 +173,7 @@ void init_params(struct grid *grid)
 }
 
 
-static _Atomic double thresh = 0.00001;
+static const double thresh = 0.0000000003;
 
 #if THREADS
 
@@ -276,12 +276,11 @@ double sor_solve(struct grid *grid)
 		}
 		//iter_err /= pow(grid->len, 2.0);
 		if((++iter % 100) == 0) {
-			printf("%d: err: %.15lf\r", iter, iter_err);
-			fflush(stdout);
-			if(stop)
+			printf("%d: err: %.15lf\n", iter, iter_err);
+			if(stop || iter_err < thresh || iter >= 10000)
 				break;
 		}
-	} while(iter_err >= thresh);
+	} while(true);
 	grid->iters = iter;
 	printf("\n");
 	return iter_err;
