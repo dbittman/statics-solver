@@ -10,8 +10,8 @@
 #include <pmmintrin.h>
 #include <immintrin.h>
 /* do we need to store error per cell? */
-#define VECTORIZE 1
-#define THREADS 0
+#define VECTORIZE 0
+#define THREADS 1
 #define NUM_THREADS 4
 struct params {
 	const float omega, prefix1, prefix2;
@@ -193,6 +193,7 @@ _Atomic int ptit;
 
 void *thread_main(void *arg)
 {
+	int thisiter = 0;
 	struct args *args = arg;
 	while(stop != true) {
 		for(int x=args->sx;x<args->ex;x++) {
@@ -200,19 +201,21 @@ void *thread_main(void *arg)
 				cur_err += do_cell(args->grid, x, y);
 			}
 		}
-		if(ptit++ % NUM_THREADS == 0) {
+		thisiter++;
+		cur_iter++;
+		if(thisiter % 1000 == 0 && args->pos == 0) {
 			iter_err = sqrt(cur_err);// / pow(args->grid->len, 2.0);
-			if(cur_iter++ % 100 == 0 && cur_iter >= 100) {
-				printf("%d: err: %.15lf\r", cur_iter, iter_err);
-				fflush(stdout);
-				if(iter_err < thresh) {
-					stop = true;
-					return NULL;
-				}
-
+			//printf("%d: err: %.15lf\r", cur_iter, iter_err);
+			//fflush(stdout);
+			if(cur_iter > 100000 || iter_err < thresh) {
+				stop = true;
+				return NULL;
 			}
 			cur_err = 0.f;
 		}
+		if(thisiter % 100 == 0)
+			if(stop == true)
+				break;
 	}
 	return NULL;
 }
@@ -252,7 +255,7 @@ double sor_solve(struct grid *grid)
 		pthread_join(threads[i], NULL);
 	}
 	printf("\n");
-	grid->iters = cur_iter;
+	grid->iters = cur_iter / NUM_THREADS;
 	return iter_err;
 }
 #else
