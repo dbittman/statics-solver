@@ -11,8 +11,8 @@
 #include <immintrin.h>
 /* do we need to store error per cell? */
 #define VECTORIZE 0
-#define THREADS 1
-#define NUM_THREADS 4
+#define THREADS 0
+#define NUM_THREADS 32
 struct params {
 	const float omega, prefix1, prefix2;
 	const float h, h_square;

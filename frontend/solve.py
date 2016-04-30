@@ -4,6 +4,7 @@ import parse
 import c_solver
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 import getopt
 import sys
 import math
@@ -17,10 +18,16 @@ opts, args = getopt.getopt(sys.argv[1:], "m:v:Vp")
 vector = False
 do_exit = False
 def add_plot(obj, title):
-    fig = plt.figure(figsize=(6, 3.2))
+    my_cmap = matplotlib.cm.get_cmap('magma')
+    fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111)
     ax.set_title(title)
-    plt.imshow(np.array(obj))
+    x = np.arange(0, len(obj[0]), 1)
+    y = np.arange(0, len(obj[0]), 1)
+    X, Y = np.meshgrid(x, y)
+    levels = np.arange(-800.0,800,100)
+    CS = plt.contour(X, Y, obj, levels)
+    plt.imshow(np.array(obj), cmap=my_cmap)
     plt.colorbar(orientation='vertical')
     ax.set_aspect('equal')
 
@@ -65,26 +72,26 @@ if verifier != "":
         err = 0.0
         for y in range(len(correct)):
             for x in range(len(correct[0])):
-                err += (pow(delta[y][x], 2.0)) / (pow(res, 2.0) * len(correct) ** 2)
-        print(":: " + str(pow(res, 2.0)))
+                if delta[y][x] != 0.0:
+                    err += pow(delta[y][x] / correct[y][x], 2.0)
         err = err / (len(correct) ** 2)
-        print("red. Chi-square = " + str(err))
+        print("err per cell = " + str(err))
         add_plot(correct, "Exact result")
         add_plot(delta, "Difference")
 
 
-add_plot(result, "Computed result")
+add_plot(result, "Computed result - " + args[0])
 
 
 
 factor = complex(0, grid.len)
 if vector:
     y, x = np.mgrid[0:100:factor, 0:100:factor]
-    negative_result = [[-result[grid.len - (x+1)][y] / 10000 for y in range(grid.len)] for x in range(grid.len)]
+    negative_result = [[-result[grid.len - (x+1)][y] / 5000 for y in range(grid.len)] for x in range(grid.len)]
     v, u = np.gradient(negative_result)
     fig, ax = plt.subplots()
-    scale = 1
-    ax.quiver(x[::scale, ::scale], y[::scale, ::scale], u[::scale, ::scale], v[::scale, ::scale], scale=1)
+    scale = 2
+    ax.quiver(x[::scale, ::scale], y[::scale, ::scale], u[::scale, ::scale], v[::scale, ::scale], scale=2)
 
 plt.show()
 
