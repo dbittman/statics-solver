@@ -53,8 +53,6 @@ if grid == 0:
     raise Exception('Input file is incomplete')
 
 res = c_solver.solve(grid, method)
-if do_exit:
-    sys.exit(0)
 if math.isnan(res):
     sys.exit(1)
 result = c_solver.reduce_to_array(grid)
@@ -73,12 +71,15 @@ if verifier != "":
         for y in range(len(correct)):
             for x in range(len(correct[0])):
                 if delta[y][x] != 0.0:
-                    err += pow(delta[y][x] / correct[y][x], 2.0)
-        err = err / (len(correct) ** 2)
+                    err += pow(delta[y][x], 2.0)
+        err = math.sqrt(err) / len(correct)
         print("err per cell = " + str(err))
-        add_plot(correct, "Exact result")
-        add_plot(delta, "Difference")
+        if not do_exit:
+            add_plot(correct, "Exact result")
+            add_plot(delta, "Difference")
 
+if do_exit:
+    sys.exit(0)
 
 add_plot(result, "Computed result - " + args[0])
 

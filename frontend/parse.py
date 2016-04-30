@@ -9,7 +9,7 @@ def parse_coords(grid, token):
 
 def parse_cell(grid, tokens):
     x,y = parse_coords(grid, tokens[1])
-    print(" * Set cell " + str(x) + "," + str(y) + " initial to " + tokens[3])
+    print(" + Set cell " + str(x) + "," + str(y) + " initial to " + tokens[3])
     grid.initials[x-1][y-1] = float(tokens[3])
 
 def parse_dirichlet(grid, tokens):
@@ -20,7 +20,7 @@ def parse_dirichlet(grid, tokens):
     ix = abs((ex - sx) / dist)
     iy = abs((ey - sy) / dist)
     expr = ' '.join(str(tok) for tok in tokens[4:])
-    print(" * Setting Dirichlet " + str(sx) + "," + str(sy) + " through " + str(ex) + "," + str(ey) + " to " + expr)
+    print(" + Setting Dirichlet " + str(sx) + "," + str(sy) + " through " + str(ex) + "," + str(ey) + " to " + expr)
     for x,y in set([(int(sx + inc*ix), int(sy + inc*iy)) for inc in range(0, dist+1)]):
         grid.dirichlets[x-1][y-1] = eval(expr)
         grid.dirichlet_presents[x-1][y-1] = 1
@@ -41,7 +41,7 @@ def parse_neumann(grid, tokens):
     iy = abs((ey - sy) / dist)
     expr = ' '.join(str(tok) for tok in tokens[5:])
     direc = directions[tokens[3]]
-    print(" * Setting Neumann " + str(sx) + "," + str(sy) + " through " + str(ex) + "," + str(ey) + " along " + tokens[3] + " to " + expr)
+    print(" + Setting Neumann " + str(sx) + "," + str(sy) + " through " + str(ex) + "," + str(ey) + " along " + tokens[3] + " to " + expr)
     for x,y in set([(int(sx + inc*ix), int(sy + inc*iy)) for inc in range(0, dist+1)]):
         grid.neumanns[direc][x-1][y-1] = eval(expr)
         grid.neumann_presents[x-1][y-1] |= (1 << direc)
@@ -78,7 +78,7 @@ def create_grid(input_path):
             # okay, let's parse shit.
             if tokens[0] == 'gridsize':
                 size = int(tokens[1])
-                print(" * Creating grid of size " + str(size) + "x" + str(size))
+                print(" + Creating grid of size " + str(size) + "x" + str(size))
                 grid = c_solver.SolverGrid_factory(size)
             else:
                 if grid == 0:
